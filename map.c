@@ -27,24 +27,34 @@ Map::Map(){
 }
 
 void Map::emptyRoom(){
+
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < size_x; j++){
+            for(int k = 0; k < size_y; k++){
+                readBuffer[i][j][k] = TILE_EMPTY;
+                writeBuffer[i][j][k] = TILE_EMPTY;
+            }
+        }
+    }
+
     for(int i = 0; i < size_y; i++){
-        readBuffer[0][i] = TILE_WALL;
-        readBuffer[size_x-1][i] = TILE_WALL;
-        writeBuffer[0][i] = TILE_WALL;
-        writeBuffer[size_x-1][i] = TILE_WALL;
+        readBuffer[3][0][i] = TILE_WALL;
+        readBuffer[3][size_x-1][i] = TILE_WALL;
+        writeBuffer[3][0][i] = TILE_WALL;
+        writeBuffer[3][size_x-1][i] = TILE_WALL;
     }
 
     for(int i = 1; i < size_x-1; i++){
-        readBuffer[i][0] = TILE_WALL;
-        readBuffer[i][size_y-1] = TILE_WALL;
-        writeBuffer[i][0] = TILE_WALL;
-        writeBuffer[i][size_y-1] = TILE_WALL;
+        readBuffer[3][i][0] = TILE_WALL;
+        readBuffer[3][i][size_y-1] = TILE_WALL;
+        writeBuffer[3][i][0] = TILE_WALL;
+        writeBuffer[3][i][size_y-1] = TILE_WALL;
     }
 
-    for(int i = 1; i <= size_x-2; i++){
-        for(int j = 1; j <= size_y-2; j++){
-            readBuffer[i][j] = TILE_FLOOR;
-            writeBuffer[i][j] = TILE_FLOOR;
+    for(int i = 0; i < size_x; i++){
+        for(int j = 0; j < size_y; j++){
+            readBuffer[0][i][j] = TILE_FLOOR;
+            writeBuffer[0][i][j] = TILE_FLOOR;
         }
     }
 }
@@ -54,7 +64,14 @@ void Map::drawToScreen(){
         //Print the map
         for(int i = 0; i < size_x; i++){
             for(int j = 0; j < size_y; j++){
-                switch(writeBuffer[i][j]){
+                int k = 3;
+                int tile = writeBuffer[k][i][j];
+                while(tile == TILE_EMPTY){
+                    k--;
+                    tile = writeBuffer[k][i][j];
+                }
+
+                switch(tile){
                     case TILE_FLOOR:
                         mvaddch(j,i,'.');
                         break;
@@ -69,6 +86,11 @@ void Map::drawToScreen(){
                     case TILE_FOOD:
                         attron(COLOR_PAIR(2));
                         mvaddch(j,i,'^');
+                        attroff(COLOR_PAIR(2));
+                        break;
+                    case TILE_AVATAR:
+                        attron(COLOR_PAIR(2));
+                        mvaddch(j,i,'@');
                         attroff(COLOR_PAIR(2));
                         break;
                     default:
@@ -86,17 +108,43 @@ void Map::drawToScreen(){
 
 
 void Map::writeTile(int x, int y, int tileVal){
-    writeBuffer[x][y] = tileVal;
+    switch(tileVal){
+        case TILE_FLOOR:
+            writeBuffer[0][x][y] = TILE_FLOOR;
+            break;
+        case TILE_WALL:
+            writeBuffer[3][x][y] = TILE_WALL;
+            break;
+        case TILE_WATER:
+            writeBuffer[1][x][y] = TILE_WATER;
+            break;
+        case TILE_FOOD:
+            writeBuffer[2][x][y] = TILE_FOOD;
+            break;
+        case TILE_AVATAR:
+            writeBuffer[3][x][y] = TILE_AVATAR;
+            break;
+        default:
+            break;
+    }
 }
 
 int Map::getTile(int x, int y){
-    return readBuffer[x][y];
+    int k = 3;
+    int tile = readBuffer[k][x][y];
+    while(tile == TILE_EMPTY){
+        k--;
+        tile = readBuffer[k][x][y];
+    }
+    return tile;
 }
 
 void Map::equalize(){
-    for(int i = 0; i < size_x; i++){
-        for(int j = 0; j < size_y; j++){
-            readBuffer[i][j] = writeBuffer[i][j];
+    for(int k = 0; k < 4; k++){
+        for(int i = 0; i < size_x; i++){
+            for(int j = 0; j < size_y; j++){
+                readBuffer[k][i][j] = writeBuffer[k][i][j];
+            }
         }
     }
 }
@@ -109,6 +157,24 @@ void Map::equalize(){
 int Map::countR1(int x, int y, int tileType){
 
     int counter = 0;
+    int layer = -1;
+    switch(tileType){
+        case TILE_FLOOR:
+            layer = 0;
+            break;
+        case TILE_WALL:
+        case TILE_AVATAR:
+            layer = 3;
+            break;
+        case TILE_WATER:
+            layer = 1;
+            break;
+        case TILE_FOOD:
+            layer = 2;
+            break;
+        default:
+            break;
+    }
 
     for(int i = x - 1; i <= x + 1; i++){
         for(int j = y - 1; j <= y + 1; j++){
@@ -116,10 +182,17 @@ int Map::countR1(int x, int y, int tileType){
                 continue;
             }else if (i == x && j == y){
                 continue;
-            }else if(readBuffer[i][j] == tileType){
+            }else if(readBuffer[layer][i][j] == tileType){
                 counter++;
             }
         }
     }
     return counter;
 }
+
+    
+
+void Map::emptyTile(int x, int y, int layer){
+    writeBuffer[layer][x][y] = TILE_EMPTY;
+}
+

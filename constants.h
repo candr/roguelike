@@ -3,12 +3,14 @@
 
 #include <stdlib.h>
 
+#define TILE_EMPTY -1
 #define TILE_FLOOR 0
 #define TILE_WALL 1
 #define TILE_WATER 2
 #define TILE_FOOD 3
 #define TILE_SLIME_HEAD 4
 #define TILE_SLIME_NODE 5
+#define TILE_AVATAR 6
 
 #define FILLP 40
 

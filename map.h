@@ -10,14 +10,19 @@
 
 class Map {
     private:
-        int readBuffer[size_x][size_y];
-        int writeBuffer[size_x][size_y];
+        //Layer 0: Base layer
+        //Layer 1: Cover
+        //Layer 2: Items
+        //Layer 3: People & Walls
+        int readBuffer[4][size_x][size_y];
+        int writeBuffer[4][size_x][size_y];
 
         void emptyRoom();
     public:
         Map();
         void drawToScreen();
         void writeTile(int x, int y, int tileVal);
+        void emptyTile(int x, int y, int layer);
         int getTile(int x, int y);
         void equalize();
 

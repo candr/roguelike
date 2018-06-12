@@ -143,14 +143,18 @@ void lineOfSight(int avat_x, int avat_y, int** map, char** mapMask){
 }
 
 int main(){
+    /*
 
-    //FILE* errfile;
-    //errfile = fopen("errfile.txt", "a");
+    FILE* errfile;
+    errfile = fopen("errfile.txt", "a");
+    */
 
     srand(time(NULL));
 
     Map map;
-
+    //fprintf(errfile, "Makes it here\n");
+    int avat_x = 5;
+    int avat_y = 5;
 
     //with caves
     makeCaves(&map);
@@ -171,30 +175,58 @@ int main(){
     map.equalize();
 
     Flood flood(10, 10, &map);
+    map.writeTile(avat_x, avat_y, TILE_AVATAR);
 
     int ch = 0;
-    //fprintf(errfile, "Right before the do\n");
 
+    //fprintf(errfile, "Right before the do\n");
     do{
+        int oldAvatX = avat_x;
+        int oldAvatY = avat_y;
+
+        switch(ch){
+            case KEY_UP:
+                avat_y--;
+                break;
+            case KEY_DOWN:
+                avat_y++;
+                break;
+            case KEY_LEFT:
+                avat_x--;
+                break;
+            case KEY_RIGHT:
+                avat_x++;
+                break;
+            default:
+                break;
+        }
+
+        //Make sure avat will not cause a segfault
+        if(avat_x >= size_x ||
+           avat_x < 0 ||
+           avat_y >= size_y ||
+           avat_y < 0){
+            avat_x = oldAvatX;
+            avat_y = oldAvatY;
+        }
+
+        //Make sure avatar is not hitting a wall
+        if(map.getTile(avat_x,avat_y) == TILE_WALL){
+            avat_x = oldAvatX;
+            avat_y = oldAvatY;
+        }
+
+        map.emptyTile(oldAvatX, oldAvatY, 3);
+        map.writeTile(avat_x, avat_y, TILE_AVATAR);
+
         flood.surge();
 
         map.drawToScreen();
 
         ch = getch();
     }while(ch != 'q');
-
+    //fclose(errfile);
     //cleanup
     endwin();
 
-    /*
-
-    for(int i = 0; i < size_x; i++){
-        free(map[i]);
-        free(mapMask[i]);
-    }
-
-    free(map);
-    free(mapMask);
-    */
-   // fclose(errfile);
 }
